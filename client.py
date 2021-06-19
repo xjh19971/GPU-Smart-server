@@ -11,9 +11,9 @@ import threading
 
 class AllocateClient(threading.Thread):
     def __init__(self):
-        super().__init__()
+        threading.Thread.__init__(self)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address = ('localhost', 8880)
+        self.server_address = ('localhost', 8885)
         self.sock.connect(self.server_address)
         print('Welcome to Smart GPU Queue')
         print('--------------------------')
@@ -28,9 +28,9 @@ class AllocateClient(threading.Thread):
 
     def get_command(self):
         msg = None
-        cid = input('Please input command ID\n')
+        cid = str(input('Please input command ID\n'))
         if cid == '1':
-            command = input('Please input command\n')
+            command = str(input('Please input command\n'))
             msg = [1, command]
             # allocator.AddWaitList(command)
         elif cid == '2':
@@ -62,12 +62,13 @@ class AllocateClient(threading.Thread):
             print('Error command!')
         if msg != None:
             real_msg = pickle.dumps(msg)
-            self.sock.sendall(real_msg)
-            real_response = self.sock.recv(0)
+            self.sock.send(real_msg)
+            if msg == [4, None]:
+                self.sock.close()
+                return 1
+            real_response = self.sock.recv(4096)
             response = pickle.loads(real_response)
             print(str(response))
-            if msg == [4, None]:
-                return 1
         return 0
 
     def run(self):

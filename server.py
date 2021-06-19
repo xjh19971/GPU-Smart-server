@@ -2,7 +2,7 @@ import os
 import socket
 import threading
 import time
-
+import pickle
 '''
 [Requirement] python3
 [Requirement] gpustat: pip install gpustat --user
@@ -13,7 +13,7 @@ class AllocateServer(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address = ('localhost', 8880)
+        self.server_address = ('localhost', 8885)
         print('Binding...')
         self.sock.bind(self.server_address)
         self.sock.listen(5)
@@ -76,10 +76,15 @@ class AllocateServer(threading.Thread):
             print('accepting')
             try:
                 while True:
-                    command = connection.recv(0)
+                    command = connection.recv(4096)
                     if command:
-                        print(command)
-                        connection.sendall(command)
+                        real_command = pickle.loads(command)
+                        print(real_command)
+                        if real_command[0]==4:
+                            connection.close()
+                            self.sock.close()
+                            return 
+                        connection.send(command)
                     else:
                         break
             finally:
