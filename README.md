@@ -5,7 +5,7 @@ Inspired by GPU-Smart(https://github.com/yuhui-zh15/GPU-Smart), I create a serve
 
 ### Usage
 
-`python3 main.py`
+`python server.py`
 
 ### Requirements
 
@@ -19,7 +19,6 @@ gpustat==0.4.1
 - [x] No need to modify any part of your code
 - [x] Clearly show waiting lists and running history
 - [x] Concisely show GPU status: memory, temperature, usage, etc.
-- [x] Allow manually set number of GPUs reserved for others
 
 ### Menu
 ```
@@ -37,7 +36,7 @@ Welcome to Smart GPU Queue
 ```
 Please input command
 <Your Command Here>
-python idle.py
+If you want to run with conda, always run a bash script with 'conda activate ...'.
 ```
 
 ### Running History
@@ -67,11 +66,3 @@ python idle.py
 [3] Tesla K20c       | 39'C,  96 % |     0 /  4742 MB |
 ```
 
-### Reserve Number
-```
-Current Reserve Number: 0
-Please input how many GPUs you want to reserve
-<Number Here>
-2
-Set successfully
-```
