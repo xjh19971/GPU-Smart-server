@@ -37,7 +37,7 @@ class AllocateServerExecuter(threading.Thread):
         command = self.waiting_list.pop(0)
         command.append(idleid[0])
         command.append(time.asctime())
-        run = os.popen('CUDA_VISIBLE_DEVICES=%s %s%s > %s' % (idleid[0], self.work_space, command[0], command[1]))
+        run = os.subprocess.run('cd %s; CUDA_VISIBLE_DEVICES=%s %s > %s' % (self.work_space, idleid[0], command[0], command[1]), shell=True)
         self.running_hist.append(command)
 
     def run(self):
