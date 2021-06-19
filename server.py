@@ -8,17 +8,17 @@ import logging
 [Requirement] python3
 [Requirement] gpustat: pip install gpustat --user
 '''
-logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='example.log', level=logging.DEBUG)
 
 class AllocateServer(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_address = ('localhost', 8885)
-        print('Binding...')
+        logging.info('Binding...')
         self.sock.bind(self.server_address)
         self.sock.listen(5)
-        print('Binding successful!')
+        logging.info('Binding successful!')
         self.running_hist = []
         self.waiting_list = []
 
