@@ -94,8 +94,9 @@ class AllocateServer(threading.Thread):
                         if real_command[0] == 4:
                             connection.close()
                             self.sock.close()
-                            return 
-                        connection.send(return_msg)
+                            return
+                        real_return_msg = pickle.dumps(return_msg)
+                        connection.send(real_return_msg)
                     else:
                         break
             finally:
