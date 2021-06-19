@@ -9,7 +9,7 @@ import logging
 [Requirement] gpustat: pip install gpustat --user
 '''
 logging.basicConfig(filename='example.log', level=logging.DEBUG)
-
+WORK_SPACE = ''
 class AllocateServerExecuter(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -17,6 +17,7 @@ class AllocateServerExecuter(threading.Thread):
         self.pending_execute = []
         self.running_hist = []
         self.waiting_list = []
+        self.work_space = WORK_SPACE
 
     def GetIdleId(self):
         idleid = []
@@ -36,7 +37,7 @@ class AllocateServerExecuter(threading.Thread):
         command = self.waiting_list.pop(0)
         command.append(idleid[0])
         command.append(time.asctime())
-        run = os.popen('CUDA_VISIBLE_DEVICES=%s %s > %s' % (idleid[0], command[0], command[1]))
+        run = os.popen('CUDA_VISIBLE_DEVICES=%s %s%s > %s' % (idleid[0], self.work_space, command[0], command[1]))
         self.running_hist.append(command)
 
     def run(self):
