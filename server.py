@@ -3,11 +3,12 @@ import socket
 import threading
 import time
 import pickle
+import logging
 '''
 [Requirement] python3
 [Requirement] gpustat: pip install gpustat --user
 '''
-
+logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
 
 class AllocateServer(threading.Thread):
     def __init__(self):
@@ -20,7 +21,6 @@ class AllocateServer(threading.Thread):
         print('Binding successful!')
         self.running_hist = []
         self.waiting_list = []
-        self.reserve_num = 0
 
     '''
     arthur1  Wed Aug 22 15:29:01 2018
@@ -44,7 +44,7 @@ class AllocateServer(threading.Thread):
     def Execute(self):
         if len(self.waiting_list) == 0: return
         idleid = self.GetIdleId()
-        if len(idleid) <= self.reserve_num: return
+        if len(idleid) <= 0: return
         command = self.waiting_list.pop(0)
         command.append(idleid[0])
         command.append(time.asctime())
@@ -55,36 +55,47 @@ class AllocateServer(threading.Thread):
         self.waiting_list.append([command, time.asctime()])
 
     def ShowWaitList(self):
+        return_msg = ''
         if len(self.waiting_list) == 0:
-            print('Waiting list is empty')
+            return_msg += 'Waiting list is empty\n'
         else:
             for i, command in enumerate(self.waiting_list):
-                print('[%s](%s): %s' % (i, command[1], command[0]))
+                return_msg += '[%s](%s): %s\n' % (i, command[1], command[0])
+        return return_msg
 
     def ShowRunHist(self):
+        return_msg = ''
         if len(self.running_hist) == 0:
-            print('Running history is empty')
+            return_msg+='Running history is empty\n'
         else:
             for i, command in enumerate(self.running_hist):
-                print('[%s]{GPU: %s}(%s->%s): %s' % (i, command[2], command[1], command[3], command[0]))
+                return_msg+='[%s]{GPU: %s}(%s->%s): %s\n' % (i, command[2], command[1], command[3], command[0])
+        return return_msg
 
     def run(self):
-        print('start')
+        logging.info('start')
         while True:
-            print('running')
+            logging.info('running')
             connection, client_address = self.sock.accept()
-            print('accepting')
+            logging.info('accepting')
             try:
                 while True:
                     command = connection.recv(4096)
                     if command:
                         real_command = pickle.loads(command)
-                        print(real_command)
-                        if real_command[0]==4:
+                        logging.debug(str(real_command))
+                        if real_command[0] == 1:
+                            return_msg = 'Command Added\n'
+                            self.AddWaitList(real_command[1])
+                        if real_command[0] == 2:
+                            return_msg = self.ShowRunHist()
+                        if real_command[0] == 3:
+                            return_msg = self.ShowWaitList()
+                        if real_command[0] == 4:
                             connection.close()
                             self.sock.close()
                             return 
-                        connection.send(command)
+                        connection.send(return_msg)
                     else:
                         break
             finally:
