@@ -10,6 +10,29 @@ import logging
 '''
 logging.basicConfig(filename='example.log', level=logging.DEBUG)
 
+class AllocateServerExecuter(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.stop_flag = False
+        self.pending_execute = []
+        self.running_hist = []
+        self.waiting_list = []
+
+    def Execute(self):
+        if len(self.waiting_list) == 0: return
+        idleid = self.GetIdleId()
+        if len(idleid) <= 0: return
+        command = self.waiting_list.pop(0)
+        command.append(idleid[0])
+        command.append(time.asctime())
+        run = os.popen('CUDA_VISIBLE_DEVICES=%s %s' % (idleid[0], command[0]))
+        self.running_hist.append(command)
+
+    def run(self):
+        while self.stop_flag is not True:
+            self.Execute()
+            time.sleep(5)
+
 class AllocateServer(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -21,6 +44,8 @@ class AllocateServer(threading.Thread):
         logging.info('Binding successful!')
         self.running_hist = []
         self.waiting_list = []
+        self.executor = AllocateServerExecuter()
+        self.executor.start()
 
     '''
     arthur1  Wed Aug 22 15:29:01 2018
@@ -41,18 +66,13 @@ class AllocateServer(threading.Thread):
                 idleid.append(gpuid)
         return idleid
 
-    def Execute(self):
-        if len(self.waiting_list) == 0: return
-        idleid = self.GetIdleId()
-        if len(idleid) <= 0: return
-        command = self.waiting_list.pop(0)
-        command.append(idleid[0])
-        command.append(time.asctime())
-        run = os.popen('CUDA_VISIBLE_DEVICES=%s %s' % (idleid[0], command[0]))
-        self.running_hist.append(command)
 
     def AddWaitList(self, command):
         self.waiting_list.append([command, time.asctime()])
+
+    def UpdateFromExecutor(self):
+        self.waiting_list = self.executor.waiting_list
+        self.running_hist = self.executor.running_hist
 
     def ShowWaitList(self):
         return_msg = ''
@@ -85,7 +105,7 @@ class AllocateServer(threading.Thread):
                         real_command = pickle.loads(command)
                         logging.debug(str(real_command))
                         if real_command[0] == 1:
-                            return_msg = 'Command Added\n'
+                            return_msg = 'Command Added. Wait at most 5 secs to execute.'
                             self.AddWaitList(real_command[1])
                         if real_command[0] == 2:
                             return_msg = self.ShowRunHist()
@@ -94,6 +114,8 @@ class AllocateServer(threading.Thread):
                         if real_command[0] == 4:
                             connection.close()
                             self.sock.close()
+                            self.executor.stop_flag = True
+                            self.executor.join()
                             return
                         real_return_msg = pickle.dumps(return_msg)
                         connection.send(real_return_msg)
@@ -102,7 +124,7 @@ class AllocateServer(threading.Thread):
             finally:
                 # Clean up the connection
                 connection.close()
-            # self.Execute()
+            self.Execute()
 
 
 if __name__ == '__main__':
