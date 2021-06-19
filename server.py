@@ -4,6 +4,7 @@ import threading
 import time
 import pickle
 import logging
+import subprocess
 '''
 [Requirement] python3
 [Requirement] gpustat: pip install gpustat --user
@@ -37,7 +38,7 @@ class AllocateServerExecuter(threading.Thread):
         command = self.waiting_list.pop(0)
         command.append(idleid[0])
         command.append(time.asctime())
-        run = os.subprocess.run('cd %s; CUDA_VISIBLE_DEVICES=%s %s > %s' % (self.work_space, idleid[0], command[0], command[1]), shell=True)
+        run = subprocess.run('cd %s; CUDA_VISIBLE_DEVICES=%s %s > %s' % (self.work_space, idleid[0], command[0], command[1]), shell=True)
         self.running_hist.append(command)
 
     def run(self):
