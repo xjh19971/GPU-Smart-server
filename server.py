@@ -18,6 +18,17 @@ class AllocateServerExecuter(threading.Thread):
         self.running_hist = []
         self.waiting_list = []
 
+    def GetIdleId(self):
+        idleid = []
+        info = os.popen('gpustat').readlines()
+        for line in info[1:]:
+            splitline = line.split('|')
+            usage = splitline[-1].strip()
+            if len(usage) == 0:
+                gpuid = int(splitline[0].split(' ')[0][1:-1])
+                idleid.append(gpuid)
+        return idleid
+
     def Execute(self):
         if len(self.waiting_list) == 0: return
         idleid = self.GetIdleId()
@@ -55,23 +66,11 @@ class AllocateServer(threading.Thread):
     [3] GeForce GTX 1080 Ti | 29'C,   0 % | 10490 / 11172 MB | amiratag(213M) amiratag(10267M)
     '''
 
-    def GetIdleId(self):
-        idleid = []
-        info = os.popen('gpustat').readlines()
-        for line in info[1:]:
-            splitline = line.split('|')
-            usage = splitline[-1].strip()
-            if len(usage) == 0:
-                gpuid = int(splitline[0].split(' ')[0][1:-1])
-                idleid.append(gpuid)
-        return idleid
-
-
     def AddWaitList(self, command):
         self.waiting_list.append([command, time.asctime()])
 
-    def UpdateFromExecutor(self):
-        self.waiting_list = self.executor.waiting_list
+    def UpdateExecutor(self):
+        self.executor.waiting_list = self.waiting_list
         self.running_hist = self.executor.running_hist
 
     def ShowWaitList(self):
@@ -100,6 +99,7 @@ class AllocateServer(threading.Thread):
             logging.info('accepting')
             try:
                 while True:
+                    self.UpdateExecutor()
                     command = connection.recv(4096)
                     if command:
                         real_command = pickle.loads(command)
@@ -119,13 +119,12 @@ class AllocateServer(threading.Thread):
                             return
                         real_return_msg = pickle.dumps(return_msg)
                         connection.send(real_return_msg)
+                        self.UpdateExecutor()
                     else:
                         break
             finally:
                 # Clean up the connection
                 connection.close()
-            self.Execute()
-
 
 if __name__ == '__main__':
     allocator = AllocateServer()
