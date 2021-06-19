@@ -1,6 +1,7 @@
 # GPU-Smart-server: Server version for Interactive Automatic GPU Manager
 Inspired by GPU-Smart(https://github.com/yuhui-zh15/GPU-Smart), I create a server-client version to run the controller at background.   
 
+Note: Currently, reserve_num in original repo is disabled. The time in running history only shows the waiting time instread of waiting time + running time 
 ## Version 1.1
 
 ### Usage
