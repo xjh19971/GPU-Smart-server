@@ -36,7 +36,7 @@ class AllocateServerExecuter(threading.Thread):
         command = self.waiting_list.pop(0)
         command.append(idleid[0])
         command.append(time.asctime())
-        run = os.popen('CUDA_VISIBLE_DEVICES=%s %s' % (idleid[0], command[0]))
+        run = os.popen('CUDA_VISIBLE_DEVICES=%s %s > %s' % (idleid[0], command[0], command[1]))
         self.running_hist.append(command)
 
     def run(self):
@@ -58,16 +58,8 @@ class AllocateServer(threading.Thread):
         self.executor = AllocateServerExecuter()
         self.executor.start()
 
-    '''
-    arthur1  Wed Aug 22 15:29:01 2018
-    [0] GeForce GTX 1080 Ti | 83'C,  55 % | 10911 / 11170 MB | yuhuiz(10901M)
-    [1] GeForce GTX 1080 Ti | 84'C,  98 % | 10931 / 11172 MB | yuhuiz(10921M)
-    [2] GeForce GTX 1080 Ti | 34'C,   0 % | 10734 / 11172 MB | amiratag(307M) amiratag(10417M)
-    [3] GeForce GTX 1080 Ti | 29'C,   0 % | 10490 / 11172 MB | amiratag(213M) amiratag(10267M)
-    '''
-
-    def AddWaitList(self, command):
-        self.waiting_list.append([command, time.asctime()])
+    def AddWaitList(self, command, logfile):
+        self.waiting_list.append([command, logfile, time.asctime()])
 
     def UpdateExecutor(self):
         self.executor.waiting_list = self.waiting_list
@@ -79,7 +71,7 @@ class AllocateServer(threading.Thread):
             return_msg += 'Waiting list is empty\n'
         else:
             for i, command in enumerate(self.waiting_list):
-                return_msg += '[%s](%s): %s\n' % (i, command[1], command[0])
+                return_msg += '[%s](%s): %s to %s\n' % (i, command[2], command[0], command[1])
         return return_msg
 
     def ShowRunHist(self):
@@ -88,7 +80,7 @@ class AllocateServer(threading.Thread):
             return_msg+='Running history is empty\n'
         else:
             for i, command in enumerate(self.running_hist):
-                return_msg+='[%s]{GPU: %s}(%s->%s): %s\n' % (i, command[2], command[1], command[3], command[0])
+                return_msg+='[%s]{GPU: %s}(%s->%s): %s to %s\n' % (i, command[3], command[2], command[4], command[0], command[1])
         return return_msg
 
     def run(self):
@@ -106,7 +98,7 @@ class AllocateServer(threading.Thread):
                         logging.debug(str(real_command))
                         if real_command[0] == 1:
                             return_msg = 'Command Added. Wait at most 5 secs to execute.'
-                            self.AddWaitList(real_command[1])
+                            self.AddWaitList(real_command[1], real_command[2])
                         if real_command[0] == 2:
                             return_msg = self.ShowRunHist()
                         if real_command[0] == 3:

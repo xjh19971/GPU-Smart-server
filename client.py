@@ -31,7 +31,8 @@ class AllocateClient(threading.Thread):
         cid = str(input('Please input command ID\n'))
         if cid == '1':
             command = str(input('Please input command\n'))
-            msg = [1, command]
+            logfile = str(input('Please input logfile\n'))
+            msg = [1, command, logfile]
             # allocator.AddWaitList(command)
         elif cid == '2':
             msg = [2, None]
