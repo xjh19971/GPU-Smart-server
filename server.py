@@ -25,10 +25,17 @@ class AllocateServerExecuter(threading.Thread):
         info = os.popen('gpustat').readlines()
         for line in info[1:]:
             splitline = line.split('|')
-            usage = splitline[-1].strip()
-            if len(usage) == 0:
+            memoryuse = splitline[-2].replace(" ", "").split('/')
+            occupied = int(memoryuse[0])
+            total = int(memoryuse[1][:-2]) # ****MB
+            occupied_rate = occupied / total
+            if occupied_rate <= 0.1:
                 gpuid = int(splitline[0].split(' ')[0][1:-1])
                 idleid.append(gpuid)
+            # usage = splitline[-1].strip()
+            # if len(usage) == 0:
+            #     gpuid = int(splitline[0].split(' ')[0][1:-1])
+            #     idleid.append(gpuid)
         return idleid
 
     def Execute(self):
