@@ -6,6 +6,8 @@ Note: Currently, reserve_num in original repo is disabled. The time in running h
 
 ### Usage
 
+Configure your workspace in `server.py`
+
 Run `./start_server.sh` to start server
 
 Run `python client.py` 
@@ -19,7 +21,8 @@ gpustat==0.4.1
 ```
 Please input command
 <Your Command Here>
-If you want to run with conda, always run a bash script with 'conda activate ...'.
+Please input logfile
+<Your Logfile Here>
 ```
 
 
